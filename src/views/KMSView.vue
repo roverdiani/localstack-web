@@ -1,9 +1,12 @@
 <template>
   <div>
     <v-row>
-      <v-col cols="12">
-        <div class="d-flex justify-space-between align-center mb-4">
-          <h1 class="text-h4">KMS Keys</h1>
+      <v-col cols="12" class="bg-secondary opacity-50">
+        <div class="d-flex justify-space-between align-center">
+          <div class="d-flex align-center">
+            <v-icon class="mr-2">mdi-key</v-icon>
+            <h1 class="text-h5">KMS Keys</h1>
+          </div>
           <v-btn color="primary" @click="createKeyDialog = true">
             <v-icon class="mr-2">mdi-plus</v-icon>
             Criar Chave
@@ -14,20 +17,21 @@
 
     <!-- Search and Filter -->
     <v-row>
-      <v-col cols="12" md="6">
+      <v-col cols="12">
         <v-text-field
           v-model="searchQuery"
           label="Buscar chaves"
           prepend-inner-icon="mdi-magnify"
           variant="outlined"
           clearable
-        ></v-text-field>
-      </v-col>
-      <v-col cols="12" md="6">
-        <v-btn @click="loadKeys" :loading="loading" variant="outlined">
-          <v-icon class="mr-2">mdi-refresh</v-icon>
-          Atualizar
-        </v-btn>
+        >
+          <template v-slot:append>
+            <v-btn @click="loadKeys" :loading="loading" variant="outlined">
+              <v-icon class="mr-2">mdi-refresh</v-icon>
+              Atualizar
+            </v-btn>
+          </template>      
+      </v-text-field>
       </v-col>
     </v-row>
 

@@ -46,8 +46,16 @@
     >
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>      
       
-      <v-toolbar-title>
-        Localstack Web
+      <v-toolbar-title class="text-h4">
+        <div class="d-flex align-center">
+          <img 
+            :src="logoImage" 
+            alt="LocalStack Logo" 
+            height="45"
+            class="mr-2"
+          />
+          LocalStack Web
+        </div>
       </v-toolbar-title>
       
       <v-spacer></v-spacer>
@@ -80,6 +88,15 @@
           </v-btn>
         </template>
       </v-tooltip>
+
+      <v-tooltip text="Sobre" location="bottom">
+        <template v-slot:activator="{ props }">
+          <v-btn icon @click="$router.push('/about')" v-bind="props">
+            <v-icon>mdi-information</v-icon>
+          </v-btn>
+        </template>
+      </v-tooltip>
+
     </v-app-bar>
 
     <v-main>
@@ -135,6 +152,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useTheme } from 'vuetify'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
+import logoImage from '@/assets/localstack-logo.png'
 
 const theme = useTheme()
 const appStore = useAppStore()

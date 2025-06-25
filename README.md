@@ -190,18 +190,12 @@ npm run format
 
 ```
 src/
-├── components/          # Componentes reutilizáveis
-├── views/              # Páginas/Views da aplicação
-│   ├── Dashboard.vue   # Dashboard principal
-│   ├── S3View.vue      # Interface S3
-│   ├── SQSView.vue     # Interface SQS
-│   ├── DynamoDBView.vue # Interface DynamoDB
-│   ├── LambdaView.vue  # Interface Lambda
-│   └── KinesisView.vue # Interface Kinesis
-├── router/             # Configuração de rotas
-├── stores/             # Gerenciamento de estado (Pinia)
-├── App.vue            # Componente raiz
-└── main.js            # Ponto de entrada
+├── components/ # Componentes reutilizáveis
+├── views/      # Páginas/Views da aplicação
+├── router/     # Configuração de rotas
+├── stores/     # Gerenciamento de estado (Pinia)
+├── App.vue     # Componente raiz
+└── main.js     # Ponto de entrada
 ```
 
 ## 🤝 Contribuição

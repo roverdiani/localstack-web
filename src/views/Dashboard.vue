@@ -1,8 +1,11 @@
 <template>
   <div>
     <v-row>
-      <v-col cols="12">
-        <h1 class="text-h4 mb-4">Dashboard</h1>
+      <v-col cols="12" class="bg-secondary opacity-50">
+        <div class="d-flex align-center">
+          <v-icon class="mr-2">mdi-view-dashboard</v-icon>
+          <h1 class="text-h5">Dashboard</h1>
+        </div>
       </v-col>
     </v-row>
 
@@ -12,7 +15,7 @@
           :color="service.status === 'active' ? 'primary' : 'grey-lighten-2'"
           :variant="service.status === 'active' ? 'elevated' : 'outlined'"
           class="pa-4"
-          height="200"
+          height="120"
           @click="service.status === 'active' ? navigateToService(service.route): null"
           style="cursor: pointer"
         >

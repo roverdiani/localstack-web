@@ -6,6 +6,7 @@ import LambdaView from '@/views/LambdaView.vue'
 import KinesisView from '@/views/KinesisView.vue'
 import SNSView from '@/views/SNSView.vue'
 import KMSView from '@/views/KMSView.vue'
+import AboutView from '@/views/AboutView.vue'
 
 export default [
   {
@@ -47,5 +48,10 @@ export default [
     path: '/kms',
     name: 'KMS',
     component: KMSView
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: AboutView
   }
 ]

@@ -1,9 +1,12 @@
 <template>
   <div>
     <v-row>
-      <v-col cols="12">
-        <div class="d-flex justify-space-between align-center mb-4">
-          <h1 class="text-h4">SNS Topics</h1>
+      <v-col cols="12" class="bg-secondary opacity-50">
+        <div class="d-flex justify-space-between align-center">
+          <div class="d-flex align-center">
+            <v-icon class="mr-2">mdi-forum</v-icon>
+            <h1 class="text-h5">SNS Topics</h1>
+          </div>
           <v-btn color="primary" @click="createTopicDialog = true">
             <v-icon class="mr-2">mdi-plus</v-icon>
             Criar Tópico
@@ -14,20 +17,21 @@
 
     <!-- Search and Filter -->
     <v-row>
-      <v-col cols="12" md="6">
+      <v-col cols="12">
         <v-text-field
           v-model="searchQuery"
           label="Buscar tópicos"
           prepend-inner-icon="mdi-magnify"
           variant="outlined"
           clearable
-        ></v-text-field>
-      </v-col>
-      <v-col cols="12" md="6">
-        <v-btn @click="loadTopics" :loading="loading" variant="outlined">
-          <v-icon class="mr-2">mdi-refresh</v-icon>
-          Atualizar
-        </v-btn>
+        >
+          <template v-slot:append>
+            <v-btn @click="loadTopics" :loading="loading" variant="outlined">
+              <v-icon class="mr-2">mdi-refresh</v-icon>
+              Atualizar
+            </v-btn>
+          </template>      
+      </v-text-field>
       </v-col>
     </v-row>
 
@@ -275,7 +279,10 @@ const getTopicName = (topicArn) => {
 const loadTopics = async () => {
   try {
     loading.value = true
+    console.log(sns);
     const response = await sns.value.listTopics().promise()
+    console.log(response);
+    
     topics.value = response.Topics || []
   } catch (error) {
     console.error('Erro ao carregar tópicos:', error)

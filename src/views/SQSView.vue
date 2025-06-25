@@ -1,9 +1,12 @@
 <template>
   <div>
     <v-row>
-      <v-col cols="12">
-        <div class="d-flex justify-space-between align-center mb-4">
-          <h1 class="text-h4">SQS Queues</h1>
+      <v-col cols="12" class="bg-secondary opacity-50">
+        <div class="d-flex justify-space-between align-center">
+          <div class="d-flex align-center">
+            <v-icon class="mr-2">mdi-format-list-bulleted</v-icon>
+            <h1 class="text-h5">SQS Queues</h1>
+          </div>          
           <v-btn color="primary" @click="createQueueDialog = true">
             <v-icon class="mr-2">mdi-plus</v-icon>
             Criar Fila
@@ -14,20 +17,21 @@
 
     <!-- Search and Filter -->
     <v-row>
-      <v-col cols="12" md="6">
+      <v-col cols="12">
         <v-text-field
           v-model="searchQuery"
           label="Buscar filas"
           prepend-inner-icon="mdi-magnify"
           variant="outlined"
           clearable
-        ></v-text-field>
-      </v-col>
-      <v-col cols="12" md="6">
-        <v-btn @click="loadQueues" :loading="loading" variant="outlined">
-          <v-icon class="mr-2">mdi-refresh</v-icon>
-          Atualizar
-        </v-btn>
+        >
+          <template v-slot:append>
+            <v-btn @click="loadQueues" :loading="loading" variant="outlined">
+              <v-icon class="mr-2">mdi-refresh</v-icon>
+              Atualizar
+            </v-btn>            
+          </template>      
+      </v-text-field>
       </v-col>
     </v-row>
 
@@ -36,17 +40,7 @@
       <v-col cols="12" md="6" lg="4" v-for="queue in filteredQueues" :key="queue.url">
         <v-card class="mb-4" elevation="2">
           <v-card-title class="d-flex justify-space-between align-center">
-            <span
-              :style="{
-                fontSize: `clamp(1rem, ${Math.max(1, 2.5 - queue.name.length * 0.05)}rem, 2rem)`,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                maxWidth: '95%'
-              }"
-            >
-              {{ queue.name }}
-            </span>
+            <span>{{ queue.name }}</span>
             <v-menu>
               <template v-slot:activator="{ props }">
                 <v-btn icon="mdi-dots-vertical" v-bind="props" size="small"></v-btn>
