@@ -20,9 +20,28 @@ services:
     volumes:
       - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - ./localstack:/etc/localstack/init/ready.d
+      - ./development-environment/localstack:/etc/localstack/init/ready.d
     networks:
-      - dev
+      - localstack-web-net
+
+  localstack-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_LOCALSTACK_ENDPOINT=http://localhost:4566
+        - VITE_AWS_DEFAULT_REGION=us-east-1
+        - VITE_AWS_ACCESS_KEY_ID=test
+        - VITE_AWS_SECRET_ACCESS_KEY=test
+    container_name: localstack-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - localstack
+    networks:
+      - localstack-web-net
+    environment:
+      - NODE_ENV=production
 
 networks:
-  dev:
+  localstack-web-net:

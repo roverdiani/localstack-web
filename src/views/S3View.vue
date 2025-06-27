@@ -202,6 +202,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
+import { 
+  ListBucketsCommand, 
+  ListObjectsV2Command, 
+  CreateBucketCommand, 
+  DeleteBucketCommand, 
+  DeleteObjectsCommand, 
+  DeleteObjectCommand, 
+  PutObjectCommand 
+} from '@aws-sdk/client-s3'
 
 const appStore = useAppStore()
 const { s3 } = storeToRefs(appStore)
@@ -236,13 +245,13 @@ const filteredBuckets = computed(() => {
 const loadBuckets = async () => {
   loading.value = true
   try {
-    const response = await s3.value.listBuckets().promise()
+    const response = await s3.value.send(new ListBucketsCommand({}))
     buckets.value = response.Buckets
     
     // Load stats for each bucket
     for (const bucket of buckets.value) {
       try {
-        const objects = await s3.value.listObjectsV2({ Bucket: bucket.Name }).promise()
+        const objects = await s3.value.send(new ListObjectsV2Command({ Bucket: bucket.Name }))
         bucket.stats = {
           objectCount: objects.KeyCount || 0,
           totalSize: objects.Contents ? objects.Contents.reduce((sum, obj) => sum + obj.Size, 0) : 0
@@ -265,7 +274,7 @@ const createBucket = async () => {
   
   creating.value = true
   try {
-    await s3.value.createBucket({ Bucket: newBucketName.value }).promise()
+    await s3.value.send(new CreateBucketCommand({ Bucket: newBucketName.value }))
     appStore.showSnackbar(`Bucket "${newBucketName.value}" criado com sucesso!`, 'success')
     createBucketDialog.value = false
     newBucketName.value = ''
@@ -283,7 +292,7 @@ const deleteBucket = async (bucketName) => {
   
   try {
     // First, delete all objects in the bucket
-    const objects = await s3.value.listObjectsV2({ Bucket: bucketName }).promise()
+    const objects = await s3.value.send(new ListObjectsV2Command({ Bucket: bucketName }))
     
     if (objects.Contents && objects.Contents.length > 0) {
       const deleteParams = {
@@ -292,11 +301,11 @@ const deleteBucket = async (bucketName) => {
           Objects: objects.Contents.map(obj => ({ Key: obj.Key }))
         }
       }
-      await s3.value.deleteObjects(deleteParams).promise()
+      await s3.value.send(new DeleteObjectsCommand(deleteParams))
     }
     
     // Then delete the bucket
-    await s3.value.deleteBucket({ Bucket: bucketName }).promise()
+    await s3.value.send(new DeleteBucketCommand({ Bucket: bucketName }))
     appStore.showSnackbar(`Bucket "${bucketName}" deletado com sucesso!`, 'success')
     await loadBuckets()
   } catch (error) {
@@ -310,7 +319,7 @@ const openBucket = async (bucketName) => {
   bucketContentsDialog.value = true
   
   try {
-    const response = await s3.value.listObjectsV2({ Bucket: bucketName }).promise()
+    const response = await s3.value.send(new ListObjectsV2Command({ Bucket: bucketName }))
     bucketObjects.value = response.Contents || []
   } catch (error) {
     console.error('Error loading bucket contents:', error)
@@ -322,7 +331,7 @@ const deleteObject = async (bucketName, objectKey) => {
   if (!confirm(`Deseja realmente deletar o objeto "${objectKey}"?`)) return
   
   try {
-    await s3.value.deleteObject({ Bucket: bucketName, Key: objectKey }).promise()
+    await s3.value.send(new DeleteObjectCommand({ Bucket: bucketName, Key: objectKey }))
     appStore.showSnackbar(`Objeto "${objectKey}" deletado com sucesso!`, 'success')
     await openBucket(bucketName) // Refresh the bucket contents
     await loadBuckets() // Refresh the bucket stats
@@ -337,13 +346,17 @@ const uploadFile = async () => {
   
   uploading.value = true
   try {
+    // Convert File to ArrayBuffer for AWS SDK v3 compatibility
+    const fileBuffer = await fileToUpload.value.arrayBuffer()
+    
     const uploadParams = {
       Bucket: currentBucket.value,
       Key: fileToUpload.value.name,
-      Body: fileToUpload.value
+      Body: new Uint8Array(fileBuffer),
+      ContentType: fileToUpload.value.type || 'application/octet-stream'
     }
     
-    await s3.value.upload(uploadParams).promise()
+    await s3.value.send(new PutObjectCommand(uploadParams))
     appStore.showSnackbar(`Arquivo "${fileToUpload.value.name}" enviado com sucesso!`, 'success')
     uploadDialog.value = false
     fileToUpload.value = null

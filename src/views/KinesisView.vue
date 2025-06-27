@@ -79,7 +79,7 @@
               {{ stream.StreamStatus }}
             </v-chip>
             <v-chip size="small" class="mr-2 mb-2" color="primary">
-              {{ stream.ShardCount || 0 }} shards
+              {{ (stream.Shards && stream.Shards.length) || 0 }} shards
             </v-chip>
             <div class="text-caption text-grey mt-2">
               Criado em: {{ formatDate(stream.StreamCreationTimestamp) }}
@@ -292,6 +292,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
+import { 
+  ListStreamsCommand, 
+  DescribeStreamCommand, 
+  CreateStreamCommand, 
+  DeleteStreamCommand, 
+  PutRecordCommand, 
+  GetShardIteratorCommand, 
+  GetRecordsCommand 
+} from '@aws-sdk/client-kinesis'
 
 const appStore = useAppStore()
 const { kinesis } = storeToRefs(appStore)
@@ -344,13 +353,13 @@ const filteredStreams = computed(() => {
 const loadStreams = async () => {
   loading.value = true
   try {
-    const response = await kinesis.value.listStreams().promise()
+    const response = await kinesis.value.send(new ListStreamsCommand({}))
     
     if (response.StreamNames && response.StreamNames.length > 0) {
       streams.value = await Promise.all(
         response.StreamNames.map(async (streamName) => {
           try {
-            const description = await kinesis.value.describeStream({ StreamName: streamName }).promise()
+            const description = await kinesis.value.send(new DescribeStreamCommand({ StreamName: streamName }))
             return description.StreamDescription
           } catch (error) {
             console.error(`Error describing stream ${streamName}:`, error)
@@ -374,10 +383,10 @@ const createStream = async () => {
   
   creating.value = true
   try {
-    await kinesis.value.createStream({
+    await kinesis.value.send(new CreateStreamCommand({
       StreamName: newStream.value.name,
       ShardCount: newStream.value.shardCount
-    }).promise()
+    }))
     
     appStore.showSnackbar(`Stream "${newStream.value.name}" criado com sucesso!`, 'success')
     
@@ -397,7 +406,7 @@ const deleteStream = async (streamName) => {
   if (!confirm(`Deseja realmente deletar o stream "${streamName}"?`)) return
   
   try {
-    await kinesis.value.deleteStream({ StreamName: streamName }).promise()
+    await kinesis.value.send(new DeleteStreamCommand({ StreamName: streamName }))
     appStore.showSnackbar(`Stream "${streamName}" deletado com sucesso!`, 'success')
     await loadStreams()
   } catch (error) {
@@ -408,7 +417,7 @@ const deleteStream = async (streamName) => {
 
 const viewStream = async (stream) => {
   try {
-    const response = await kinesis.value.describeStream({ StreamName: stream.StreamName }).promise()
+    const response = await kinesis.value.send(new DescribeStreamCommand({ StreamName: stream.StreamName }))
     currentStream.value = response.StreamDescription
     detailsDialog.value = true
   } catch (error) {
@@ -431,11 +440,11 @@ const sendRecord = async () => {
   
   sending.value = true
   try {
-    await kinesis.value.putRecord({
+    await kinesis.value.send(new PutRecordCommand({
       StreamName: streamToSend.value.StreamName,
       PartitionKey: recordData.value.partitionKey,
       Data: recordData.value.data
-    }).promise()
+    }))
     
     appStore.showSnackbar('Record enviado com sucesso!', 'success')
     putRecordDialog.value = false
@@ -460,9 +469,9 @@ const readRecords = async () => {
   reading.value = true
   try {
     // First, get shards
-    const streamDesc = await kinesis.value.describeStream({ 
+    const streamDesc = await kinesis.value.send(new DescribeStreamCommand({ 
       StreamName: streamToRead.value.StreamName 
-    }).promise()
+    }))
     
     if (!streamDesc.StreamDescription.Shards || streamDesc.StreamDescription.Shards.length === 0) {
       records.value = []
@@ -471,17 +480,17 @@ const readRecords = async () => {
     
     // Get shard iterator for the first shard
     const shardId = streamDesc.StreamDescription.Shards[0].ShardId
-    const iteratorResponse = await kinesis.value.getShardIterator({
+    const iteratorResponse = await kinesis.value.send(new GetShardIteratorCommand({
       StreamName: streamToRead.value.StreamName,
       ShardId: shardId,
       ShardIteratorType: 'TRIM_HORIZON'
-    }).promise()
+    }))
     
     // Get records
-    const recordsResponse = await kinesis.value.getRecords({
+    const recordsResponse = await kinesis.value.send(new GetRecordsCommand({
       ShardIterator: iteratorResponse.ShardIterator,
       Limit: 100
-    }).promise()
+    }))
     
     records.value = recordsResponse.Records || []
   } catch (error) {

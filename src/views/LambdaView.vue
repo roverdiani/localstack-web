@@ -397,6 +397,13 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
 import JSZip from 'jszip'
+import { 
+  ListFunctionsCommand, 
+  GetFunctionCommand, 
+  InvokeCommand, 
+  DeleteFunctionCommand, 
+  CreateFunctionCommand 
+} from '@aws-sdk/client-lambda'
 
 const appStore = useAppStore()
 const { lambda } = storeToRefs(appStore)
@@ -564,7 +571,7 @@ const validateJson = (value) => {
 const loadFunctions = async () => {
   loading.value = true
   try {
-    const response = await lambda.value.listFunctions().promise()
+    const response = await lambda.value.send(new ListFunctionsCommand({}))
     functions.value = response.Functions || []
   } catch (error) {
     console.error('Error loading functions:', error)
@@ -576,7 +583,7 @@ const loadFunctions = async () => {
 
 const viewFunction = async (func) => {
   try {
-    const response = await lambda.value.getFunction({ FunctionName: func.FunctionName }).promise()
+    const response = await lambda.value.send(new GetFunctionCommand({ FunctionName: func.FunctionName }))
     currentFunction.value = response.Configuration
     detailsDialog.value = true
   } catch (error) {
@@ -614,7 +621,7 @@ const executeFunctionInvoke = async () => {
       params.LogType = 'Tail'
     }
     
-    const response = await lambda.value.invoke(params).promise()
+    const response = await lambda.value.send(new InvokeCommand(params))
     invokeResult.value = response
     
     invokeDialog.value = false
@@ -633,7 +640,7 @@ const deleteFunction = async (functionName) => {
   if (!confirm(`Deseja realmente deletar a função "${functionName}"?`)) return
   
   try {
-    await lambda.value.deleteFunction({ FunctionName: functionName }).promise()
+    await lambda.value.send(new DeleteFunctionCommand({ FunctionName: functionName }))
     appStore.showSnackbar(`Função "${functionName}" deletada com sucesso!`, 'success')
     await loadFunctions()
   } catch (error) {
@@ -666,10 +673,28 @@ const decodeLogs = (logResult) => {
 
 const formatJsonResponse = (payload) => {
   try {
-    const parsed = JSON.parse(payload)
+    // AWS SDK v3 returns Payload as Uint8Array, need to decode it
+    let payloadString = ''
+    
+    if (payload instanceof Uint8Array) {
+      // Convert Uint8Array to string
+      payloadString = new TextDecoder().decode(payload)
+    } else if (typeof payload === 'string') {
+      payloadString = payload
+    } else {
+      // If it's already an object, stringify it
+      return JSON.stringify(payload, null, 2)
+    }
+    
+    // Try to parse as JSON for pretty formatting
+    const parsed = JSON.parse(payloadString)
     return JSON.stringify(parsed, null, 2)
-  } catch {
-    return payload
+  } catch (error) {
+    // If JSON parsing fails, return as string
+    if (payload instanceof Uint8Array) {
+      return new TextDecoder().decode(payload)
+    }
+    return String(payload)
   }
 }
 
@@ -766,7 +791,7 @@ const createFunction = async () => {
       params.Environment = environment
     }
     
-    await lambda.value.createFunction(params).promise()
+    await lambda.value.send(new CreateFunctionCommand(params))
     
     appStore.showSnackbar('Função Lambda criada com sucesso!', 'success')
     closeCreateDialog()

@@ -1,6 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import AWS from 'aws-sdk'
+import { S3Client } from '@aws-sdk/client-s3'
+import { SNSClient } from '@aws-sdk/client-sns'
+import { SQSClient } from '@aws-sdk/client-sqs'
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { LambdaClient } from '@aws-sdk/client-lambda'
+import { KinesisClient } from '@aws-sdk/client-kinesis'
+import { KMSClient } from '@aws-sdk/client-kms'
 
 export const useAppStore = defineStore('app', () => {
   const endpoint = ref(import.meta.env.VITE_LOCALSTACK_ENDPOINT || 'http://localhost:4566')
@@ -15,14 +21,16 @@ export const useAppStore = defineStore('app', () => {
     timeout: 4000
   })
 
-  // AWS SDK Configuration
+  // AWS SDK v3 Configuration
   const awsConfig = {
     region: region.value,
-    accessKeyId: accessKeyId.value,
-    secretAccessKey: secretAccessKey.value,    
+    credentials: {
+      accessKeyId: accessKeyId.value,
+      secretAccessKey: secretAccessKey.value
+    },
     endpoint: endpoint.value,
-    s3ForcePathStyle: true,
-    sslEnabled: false
+    forcePathStyle: true,
+    tls: false
   }
 
   // Initialize AWS services
@@ -35,15 +43,22 @@ export const useAppStore = defineStore('app', () => {
   const kms = ref(null)
 
   const initializeServices = () => {
-    const config = { ...awsConfig, endpoint: endpoint.value }
+    const config = { 
+      ...awsConfig, 
+      endpoint: endpoint.value,
+      credentials: {
+        accessKeyId: accessKeyId.value,
+        secretAccessKey: secretAccessKey.value
+      }
+    }
     
-    s3.value = new AWS.S3(config)
-    sns.value = new AWS.SNS(config)
-    sqs.value = new AWS.SQS(config)
-    dynamodb.value = new AWS.DynamoDB(config)
-    lambda.value = new AWS.Lambda(config)
-    kinesis.value = new AWS.Kinesis(config)
-    kms.value = new AWS.KMS(config)
+    s3.value = new S3Client(config)
+    sns.value = new SNSClient(config)
+    sqs.value = new SQSClient(config)
+    dynamodb.value = new DynamoDBClient(config)
+    lambda.value = new LambdaClient(config)
+    kinesis.value = new KinesisClient(config)
+    kms.value = new KMSClient(config)
   }
 
   const setEndpoint = (newEndpoint) => {
@@ -61,7 +76,9 @@ export const useAppStore = defineStore('app', () => {
       if (!s3.value) initializeServices()
 
       if (s3.value) {
-        await s3.value.listBuckets().promise()
+        const { ListBucketsCommand } = await import('@aws-sdk/client-s3')
+        const command = new ListBucketsCommand({})
+        await s3.value.send(command)
         connectionStatus.value = 'connected'
       } else {
         connectionStatus.value = 'disconnected'

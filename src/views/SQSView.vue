@@ -268,6 +268,16 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
+import { 
+  ListQueuesCommand, 
+  GetQueueAttributesCommand, 
+  CreateQueueCommand, 
+  DeleteQueueCommand, 
+  PurgeQueueCommand, 
+  ReceiveMessageCommand, 
+  SendMessageCommand, 
+  DeleteMessageCommand 
+} from '@aws-sdk/client-sqs'
 
 const appStore = useAppStore()
 const { sqs } = storeToRefs(appStore)
@@ -313,15 +323,15 @@ const filteredQueues = computed(() => {
 const loadQueues = async () => {
   loading.value = true
   try {
-    const response = await sqs.value.listQueues().promise()
+    const response = await sqs.value.send(new ListQueuesCommand({}))
     
     if (response.QueueUrls) {
       queues.value = await Promise.all(
         response.QueueUrls.map(async (url) => {
-          const attributes = await sqs.value.getQueueAttributes({
+          const attributes = await sqs.value.send(new GetQueueAttributesCommand({
             QueueUrl: url,
             AttributeNames: ['All']
-          }).promise()
+          }))
           
           return {
             url,
@@ -355,7 +365,7 @@ const createQueue = async () => {
       }
     }
     
-    await sqs.value.createQueue(params).promise()
+    await sqs.value.send(new CreateQueueCommand(params))
     appStore.showSnackbar(`Fila "${newQueue.value.name}" criada com sucesso!`, 'success')
     
     createQueueDialog.value = false
@@ -379,7 +389,7 @@ const deleteQueue = async (queue) => {
   if (!confirm(`Deseja realmente deletar a fila "${queue.name}"?`)) return
   
   try {
-    await sqs.value.deleteQueue({ QueueUrl: queue.url }).promise()
+    await sqs.value.send(new DeleteQueueCommand({ QueueUrl: queue.url }))
     appStore.showSnackbar(`Fila "${queue.name}" deletada com sucesso!`, 'success')
     await loadQueues()
   } catch (error) {
@@ -392,7 +402,7 @@ const purgeQueue = async (queue) => {
   if (!confirm(`Deseja realmente limpar todas as mensagens da fila "${queue.name}"?`)) return
   
   try {
-    await sqs.value.purgeQueue({ QueueUrl: queue.url }).promise()
+    await sqs.value.send(new PurgeQueueCommand({ QueueUrl: queue.url }))
     appStore.showSnackbar(`Fila "${queue.name}" limpa com sucesso!`, 'success')
     await loadQueues()
   } catch (error) {
@@ -419,7 +429,7 @@ const receiveMessages = async () => {
       AttributeNames: ['All']
     }
     
-    const response = await sqs.value.receiveMessage(params).promise()
+    const response = await sqs.value.send(new ReceiveMessageCommand(params))
     messages.value = response.Messages || []
   } catch (error) {
     console.error('Error receiving messages:', error)
@@ -440,7 +450,7 @@ const sendMessage = async () => {
       DelaySeconds: newMessage.value.delaySeconds
     }
     
-    await sqs.value.sendMessage(params).promise()
+    await sqs.value.send(new SendMessageCommand(params))
     appStore.showSnackbar('Mensagem enviada com sucesso!', 'success')
     
     sendMessageDialog.value = false
@@ -460,10 +470,10 @@ const deleteMessage = async (message) => {
   if (!confirm('Deseja realmente deletar esta mensagem?')) return
   
   try {
-    await sqs.value.deleteMessage({
+    await sqs.value.send(new DeleteMessageCommand({
       QueueUrl: currentQueue.value.url,
       ReceiptHandle: message.ReceiptHandle
-    }).promise()
+    }))
     
     appStore.showSnackbar('Mensagem deletada com sucesso!', 'success')
     await receiveMessages()

@@ -119,6 +119,15 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
 
+// AWS SDK v3 Commands
+import { ListTablesCommand, DeleteTableCommand } from '@aws-sdk/client-dynamodb'
+import { ListStreamsCommand } from '@aws-sdk/client-kinesis'
+import { ListKeysCommand } from '@aws-sdk/client-kms'
+import { ListFunctionsCommand } from '@aws-sdk/client-lambda'
+import { ListBucketsCommand, ListObjectsV2Command, DeleteObjectsCommand, DeleteBucketCommand } from '@aws-sdk/client-s3'
+import { ListTopicsCommand } from '@aws-sdk/client-sns'
+import { ListQueuesCommand, DeleteQueueCommand } from '@aws-sdk/client-sqs'
+
 const router = useRouter()
 const appStore = useAppStore()
 const { s3, sns, sqs, dynamodb, lambda, kinesis, kms } = storeToRefs(appStore)
@@ -223,7 +232,7 @@ const loadServiceStats = async () => {
   try {
     // DynamoDB Stats
     try {
-      const dynamoTables = await dynamodb.value.listTables().promise()
+      const dynamoTables = await dynamodb.value.send(new ListTablesCommand({}))
       services.value[0].status = 'active'
       services.value[0].stats = {
         'Tabelas': dynamoTables.TableNames ? dynamoTables.TableNames.length : 0
@@ -235,7 +244,7 @@ const loadServiceStats = async () => {
 
     // Kinesis Stats
     try {
-      const kinesisStreams = await kinesis.value.listStreams().promise()
+      const kinesisStreams = await kinesis.value.send(new ListStreamsCommand({}))
       services.value[1].status = 'active'
       services.value[1].stats = {
         'Streams': kinesisStreams.StreamNames ? kinesisStreams.StreamNames.length : 0
@@ -247,7 +256,7 @@ const loadServiceStats = async () => {
 
     // KMS Stats
     try {
-      const kmsKeys = await kms.value.listKeys().promise()
+      const kmsKeys = await kms.value.send(new ListKeysCommand({}))
       services.value[2].status = 'active'
       services.value[2].stats = {
         'Chaves': kmsKeys.Keys ? kmsKeys.Keys.length : 0
@@ -259,7 +268,7 @@ const loadServiceStats = async () => {
 
     // Lambda Stats
     try {
-      const lambdaFunctions = await lambda.value.listFunctions().promise()
+      const lambdaFunctions = await lambda.value.send(new ListFunctionsCommand({}))
       services.value[3].status = 'active'
       services.value[3].stats = {
         'Funções': lambdaFunctions.Functions ? lambdaFunctions.Functions.length : 0
@@ -271,7 +280,7 @@ const loadServiceStats = async () => {
 
     // S3 Stats
     try {
-      const s3Buckets = await s3.value.listBuckets().promise()
+      const s3Buckets = await s3.value.send(new ListBucketsCommand({}))
       services.value[4].status = 'active'
       services.value[4].stats = {
         'Buckets': s3Buckets.Buckets ? s3Buckets.Buckets.length : 0
@@ -283,7 +292,7 @@ const loadServiceStats = async () => {
 
     // SNS Stats
     try {
-      const snsTopics = await sns.value.listTopics().promise()
+      const snsTopics = await sns.value.send(new ListTopicsCommand({}))
       services.value[5].status = 'active'
       services.value[5].stats = {
         'Tópicos': snsTopics.Topics ? snsTopics.Topics.length : 0
@@ -295,7 +304,7 @@ const loadServiceStats = async () => {
 
     // SQS Stats
     try {
-      const sqsQueues = await sqs.value.listQueues().promise()
+      const sqsQueues = await sqs.value.send(new ListQueuesCommand({}))
       services.value[6].status = 'active'
       services.value[6].stats = {
         'Filas': sqsQueues.QueueUrls ? sqsQueues.QueueUrls.length : 0
@@ -382,11 +391,11 @@ const performClearAction = async (action) => {
 }
 
 const clearAllS3Buckets = async () => {
-  const buckets = await s3.value.listBuckets().promise()
+  const buckets = await s3.value.send(new ListBucketsCommand({}))
   
   for (const bucket of buckets.Buckets) {
     // First, delete all objects in the bucket
-    const objects = await s3.value.listObjectsV2({ Bucket: bucket.Name }).promise()
+    const objects = await s3.value.send(new ListObjectsV2Command({ Bucket: bucket.Name }))
     
     if (objects.Contents && objects.Contents.length > 0) {
       const deleteParams = {
@@ -395,29 +404,29 @@ const clearAllS3Buckets = async () => {
           Objects: objects.Contents.map(obj => ({ Key: obj.Key }))
         }
       }
-      await s3.value.deleteObjects(deleteParams).promise()
+      await s3.value.send(new DeleteObjectsCommand(deleteParams))
     }
     
     // Then delete the bucket
-    await s3.value.deleteBucket({ Bucket: bucket.Name }).promise()
+    await s3.value.send(new DeleteBucketCommand({ Bucket: bucket.Name }))
   }
 }
 
 const clearAllSQSQueues = async () => {
-  const queues = await sqs.value.listQueues().promise()
+  const queues = await sqs.value.send(new ListQueuesCommand({}))
   
   if (queues.QueueUrls) {
     for (const queueUrl of queues.QueueUrls) {
-      await sqs.value.deleteQueue({ QueueUrl: queueUrl }).promise()
+      await sqs.value.send(new DeleteQueueCommand({ QueueUrl: queueUrl }))
     }
   }
 }
 
 const clearAllDynamoDBTables = async () => {
-  const tables = await dynamodb.value.listTables().promise()
+  const tables = await dynamodb.value.send(new ListTablesCommand({}))
   
   for (const tableName of tables.TableNames) {
-    await dynamodb.value.deleteTable({ TableName: tableName }).promise()
+    await dynamodb.value.send(new DeleteTableCommand({ TableName: tableName }))
   }
 }
 

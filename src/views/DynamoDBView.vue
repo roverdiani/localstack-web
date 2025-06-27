@@ -295,6 +295,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
+import { 
+  ListTablesCommand, 
+  DescribeTableCommand, 
+  CreateTableCommand, 
+  DeleteTableCommand, 
+  ScanCommand, 
+  DeleteItemCommand, 
+  PutItemCommand 
+} from '@aws-sdk/client-dynamodb'
 
 const appStore = useAppStore()
 const { dynamodb } = storeToRefs(appStore)
@@ -359,12 +368,12 @@ const validateJson = (value) => {
 const loadTables = async () => {
   loading.value = true
   try {
-    const response = await dynamodb.value.listTables().promise()
+    const response = await dynamodb.value.send(new ListTablesCommand({}))
     
     tables.value = await Promise.all(
       response.TableNames.map(async (tableName) => {
         try {
-          const description = await dynamodb.value.describeTable({ TableName: tableName }).promise()
+          const description = await dynamodb.value.send(new DescribeTableCommand({ TableName: tableName }))
           return description.Table
         } catch (error) {
           console.error(`Error describing table ${tableName}:`, error)
@@ -425,7 +434,7 @@ const createTable = async () => {
       }
     }
     
-    await dynamodb.value.createTable(params).promise()
+    await dynamodb.value.send(new CreateTableCommand(params))
     appStore.showSnackbar(`Tabela "${newTable.value.name}" criada com sucesso!`, 'success')
     
     createTableDialog.value = false
@@ -452,7 +461,7 @@ const deleteTable = async (tableName) => {
   if (!confirm(`Deseja realmente deletar a tabela "${tableName}"?`)) return
   
   try {
-    await dynamodb.value.deleteTable({ TableName: tableName }).promise()
+    await dynamodb.value.send(new DeleteTableCommand({ TableName: tableName }))
     appStore.showSnackbar(`Tabela "${tableName}" deletada com sucesso!`, 'success')
     await loadTables()
   } catch (error) {
@@ -472,7 +481,7 @@ const scanTable = async () => {
   
   scanningTable.value = true
   try {
-    const response = await dynamodb.value.scan({ TableName: currentTable.value }).promise()
+    const response = await dynamodb.value.send(new ScanCommand({ TableName: currentTable.value }))
     
     if (response.Items && response.Items.length > 0) {
       // Convert DynamoDB items to regular objects
@@ -525,7 +534,7 @@ const deleteItem = async (item) => {
   
   try {
     // Get table key schema to build the key
-    const tableDesc = await dynamodb.value.describeTable({ TableName: currentTable.value }).promise()
+    const tableDesc = await dynamodb.value.send(new DescribeTableCommand({ TableName: currentTable.value }))
     const keySchema = tableDesc.Table.KeySchema
     
     const key = {}
@@ -533,10 +542,10 @@ const deleteItem = async (item) => {
       key[keyAttr.AttributeName] = item._rawItem[keyAttr.AttributeName]
     }
     
-    await dynamodb.value.deleteItem({
+    await dynamodb.value.send(new DeleteItemCommand({
       TableName: currentTable.value,
       Key: key
-    }).promise()
+    }))
     
     appStore.showSnackbar('Item deletado com sucesso!', 'success')
     await scanTable()
@@ -555,17 +564,17 @@ const saveItem = async () => {
     
     if (editingItem.value) {
       // Update existing item
-      await dynamodb.value.putItem({
+      await dynamodb.value.send(new PutItemCommand({
         TableName: currentTable.value,
         Item: item
-      }).promise()
+      }))
       appStore.showSnackbar('Item atualizado com sucesso!', 'success')
     } else {
       // Add new item
-      await dynamodb.value.putItem({
+      await dynamodb.value.send(new PutItemCommand({
         TableName: currentTable.value,
         Item: item
-      }).promise()
+      }))
       appStore.showSnackbar('Item adicionado com sucesso!', 'success')
     }
     

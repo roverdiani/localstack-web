@@ -230,6 +230,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
+import { 
+  ListTopicsCommand, 
+  CreateTopicCommand, 
+  DeleteTopicCommand, 
+  PublishCommand, 
+  ListSubscriptionsByTopicCommand 
+} from '@aws-sdk/client-sns'
 
 const appStore = useAppStore()
 const { sns } = storeToRefs(appStore)
@@ -280,7 +287,7 @@ const loadTopics = async () => {
   try {
     loading.value = true
     console.log(sns);
-    const response = await sns.value.listTopics().promise()
+    const response = await sns.value.send(new ListTopicsCommand({}))
     console.log(response);
     
     topics.value = response.Topics || []
@@ -297,9 +304,9 @@ const createTopic = async () => {
   
   try {
     creating.value = true
-    const response = await sns.value.createTopic({
+    const response = await sns.value.send(new CreateTopicCommand({
       Name: newTopicName.value
-    }).promise()
+    }))
     
     appStore.showSnackbar('Tópico criado com sucesso!', 'success')
     createTopicDialog.value = false
@@ -318,9 +325,9 @@ const openTopic = async (topicArn) => {
     selectedTopic.value = { TopicArn: topicArn }
     
     // Load subscriptions
-    const response = await sns.value.listSubscriptionsByTopic({
+    const response = await sns.value.send(new ListSubscriptionsByTopicCommand({
       TopicArn: topicArn
-    }).promise()
+    }))
     
     subscriptions.value = response.Subscriptions || []
     topicDetailsDialog.value = true
@@ -351,7 +358,7 @@ const publishMessage = async () => {
       payload.Subject = messageSubject.value
     }
     
-    await sns.value.publish(payload).promise()
+    await sns.value.send(new PublishCommand(payload))
     
     appStore.showSnackbar('Mensagem publicada com sucesso!', 'success')
     publishDialog.value = false
@@ -371,9 +378,9 @@ const confirmDeleteTopic = (topicArn) => {
 const deleteTopic = async () => {
   try {
     deleting.value = true
-    await sns.value.deleteTopic({
+    await sns.value.send(new DeleteTopicCommand({
       TopicArn: topicToDelete.value
-    }).promise()
+    }))
     
     appStore.showSnackbar('Tópico excluído com sucesso!', 'success')
     deleteDialog.value = false

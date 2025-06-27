@@ -300,6 +300,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
+import { 
+  ListKeysCommand, 
+  DescribeKeyCommand, 
+  CreateKeyCommand, 
+  EncryptCommand, 
+  DecryptCommand, 
+  ScheduleKeyDeletionCommand 
+} from '@aws-sdk/client-kms'
 
 const appStore = useAppStore()
 const { kms } = storeToRefs(appStore)
@@ -382,14 +390,14 @@ const formatDate = (dateString) => {
 const loadKeys = async () => {
   try {
     loading.value = true
-    const response = await kms.value.listKeys().promise()
+    const response = await kms.value.send(new ListKeysCommand({}))
     const keyList = response.Keys || []
     
     // Get detailed information for each key
     const detailedKeys = await Promise.all(
       keyList.map(async (key) => {
         try {
-          const detailResponse = await kms.value.describeKey({ KeyId: key.KeyId }).promise()
+          const detailResponse = await kms.value.send(new DescribeKeyCommand({ KeyId: key.KeyId }))
           return detailResponse.KeyMetadata
         } catch (error) {
           console.error('Erro ao carregar detalhes da chave:', error)
@@ -419,7 +427,7 @@ const createKey = async () => {
       payload.Description = newKeyDescription.value
     }
     
-    await kms.value.createKey(payload).promise()
+    await kms.value.send(new CreateKeyCommand(payload))
     
     appStore.showSnackbar('Chave criada com sucesso!', 'success')
     createKeyDialog.value = false
@@ -435,7 +443,7 @@ const createKey = async () => {
 
 const openKey = async (keyId) => {
   try {
-    const response = await kms.value.describeKey({ KeyId: keyId }).promise()
+    const response = await kms.value.send(new DescribeKeyCommand({ KeyId: keyId }))
     selectedKey.value = response.KeyMetadata
     keyDetailsDialog.value = true
   } catch (error) {
@@ -456,12 +464,12 @@ const performEncrypt = async () => {
   
   try {
     encrypting.value = true
-    const response = await kms.value.encrypt({
+    const response = await kms.value.send(new EncryptCommand({
       KeyId: keyToEncrypt.value,
       Plaintext: dataToEncrypt.value
-    }).promise()
+    }))
     
-    encryptedData.value = response.CiphertextBlob.toString('base64')
+    encryptedData.value = btoa(String.fromCharCode(...new Uint8Array(response.CiphertextBlob)))    
     appStore.showSnackbar('Dados criptografados com sucesso!', 'success')
   } catch (error) {
     console.error('Erro ao criptografar dados:', error)
@@ -490,11 +498,11 @@ const performDecrypt = async () => {
       bytes[i] = binaryString.charCodeAt(i)
     }
     
-    const response = await kms.value.decrypt({
+    const response = await kms.value.send(new DecryptCommand({
       CiphertextBlob: bytes
-    }).promise()
+    }))
     
-    decryptedData.value = response.Plaintext.toString()
+    decryptedData.value = new TextDecoder().decode(response.Plaintext)
     appStore.showSnackbar('Dados descriptografados com sucesso!', 'success')
   } catch (error) {
     console.error('Erro ao descriptografar dados:', error)
@@ -512,10 +520,10 @@ const confirmDeleteKey = (keyId) => {
 const deleteKey = async () => {
   try {
     deleting.value = true
-    await kms.value.scheduleKeyDeletion({
+    await kms.value.send(new ScheduleKeyDeletionCommand({
       KeyId: keyToDelete.value,
       PendingWindowInDays: 7
-    }).promise()
+    }))
     
     appStore.showSnackbar('Exclusão da chave agendada com sucesso!', 'success')
     deleteDialog.value = false
