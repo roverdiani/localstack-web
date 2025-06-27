@@ -7,10 +7,22 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy source code
 COPY . .
+
+# Add build arguments
+ARG VITE_LOCALSTACK_ENDPOINT
+ARG VITE_AWS_DEFAULT_REGION
+ARG VITE_AWS_ACCESS_KEY_ID
+ARG VITE_AWS_SECRET_ACCESS_KEY
+
+# Set environment variables from build args
+ENV VITE_LOCALSTACK_ENDPOINT=${VITE_LOCALSTACK_ENDPOINT}
+ENV VITE_AWS_DEFAULT_REGION=${VITE_AWS_DEFAULT_REGION}
+ENV VITE_AWS_ACCESS_KEY_ID=${VITE_AWS_ACCESS_KEY_ID}
+ENV VITE_AWS_SECRET_ACCESS_KEY=${VITE_AWS_SECRET_ACCESS_KEY}
 
 # Build the application
 RUN npm run build
