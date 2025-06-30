@@ -40,7 +40,7 @@
       <v-col cols="12" md="6" lg="4" v-for="queue in filteredQueues" :key="queue.url">
         <v-card class="mb-4" elevation="2">
           <v-card-title class="d-flex justify-space-between align-center">
-            <span>{{ queue.name }}</span>
+            <TitleNameWithTooltip :name="queue.name" />
             <v-menu>
               <template v-slot:activator="{ props }">
                 <v-btn icon="mdi-dots-vertical" v-bind="props" size="small"></v-btn>
@@ -157,7 +157,7 @@
     <v-dialog v-model="messagesDialog" max-width="900" scrollable>
       <v-card>
         <v-card-title class="d-flex justify-space-between align-center">
-          <span>Mensagens: {{ currentQueue?.name }}</span>
+          <TitleNameWithTooltip :name="currentQueue?.name" />
           <div>
             <v-btn 
               color="primary" 
@@ -268,6 +268,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
+import TitleNameWithTooltip from '@/components/TitleNameWithTooltip.vue'
 import { 
   ListQueuesCommand, 
   GetQueueAttributesCommand, 
@@ -494,3 +495,7 @@ onMounted(() => {
   loadQueues()
 })
 </script>
+
+<style scoped>
+/* Remover a classe .queue-name-truncate daqui, pois agora está no componente */
+</style>

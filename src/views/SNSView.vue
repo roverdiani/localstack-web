@@ -40,7 +40,7 @@
       <v-col cols="12" md="6" lg="4" v-for="topic in filteredTopics" :key="topic.TopicArn">
         <v-card class="mb-4" elevation="2">
           <v-card-title class="d-flex justify-space-between align-center">
-            <span>{{ getTopicName(topic.TopicArn) }}</span>
+            <TitleNameWithTooltip :name="getTopicName(topic.TopicArn)" />
             <v-menu>
               <template v-slot:activator="{ props }">
                 <v-btn icon="mdi-dots-vertical" v-bind="props" size="small"></v-btn>
@@ -230,6 +230,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
+import TitleNameWithTooltip from '@/components/TitleNameWithTooltip.vue'
 import { 
   ListTopicsCommand, 
   CreateTopicCommand, 
@@ -286,9 +287,7 @@ const getTopicName = (topicArn) => {
 const loadTopics = async () => {
   try {
     loading.value = true
-    console.log(sns);
     const response = await sns.value.send(new ListTopicsCommand({}))
-    console.log(response);
     
     topics.value = response.Topics || []
   } catch (error) {

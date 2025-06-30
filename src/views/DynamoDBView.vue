@@ -40,7 +40,7 @@
       <v-col cols="12" md="6" lg="4" v-for="table in filteredTables" :key="table.TableName">
         <v-card class="mb-4" elevation="2">
           <v-card-title class="d-flex justify-space-between align-center">
-            <span>{{ table.TableName }}</span>
+            <TitleNameWithTooltip :name="table.TableName" />
             <v-menu>
               <template v-slot:activator="{ props }">
                 <v-btn icon="mdi-dots-vertical" v-bind="props" size="small"></v-btn>
@@ -295,6 +295,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
+import TitleNameWithTooltip from '@/components/TitleNameWithTooltip.vue'
 import { 
   ListTablesCommand, 
   DescribeTableCommand, 
