@@ -19,7 +19,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { i18n } from '@/lang/i18n.js'
+
+const { t } = i18n.global
 
 defineProps({
   show: {
@@ -28,7 +30,7 @@ defineProps({
   },
   message: {
     type: String,
-    default: 'Carregando...'
+    default: t('loading')
   }
 })
 </script>

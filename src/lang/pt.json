@@ -11,5 +11,6 @@
   "about.collaboration": "Este projeto é open source e aceita contribuições da comunidade. Sinta-se à vontade para reportar bugs, sugerir melhorias ou contribuir com código.",
   "about.view-on-github": "Ver no GitHub",
   "about.report-issue": "Reportar Issue",
-  "about.technology-stack": "Stack Tecnológico"
+  "about.technology-stack": "Stack Tecnológico",
+  "loading": "Carregando..."
 }

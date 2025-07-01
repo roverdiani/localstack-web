@@ -11,5 +11,6 @@
   "about.collaboration": "This project is open source and welcomes community contributions. Feel free to report bugs, suggest improvements, or contribute code.",
   "about.view-on-github": "View on GitHub",
   "about.report-issue": "Report Issue",
-  "about.technology-stack": "Technology Stack"
+  "about.technology-stack": "Technology Stack",
+  "loading": "Loading..."
 }
