@@ -9,6 +9,7 @@ import 'vuetify/styles'
 
 import App from './App.vue'
 import routes from './router/routes.js'
+import { i18n } from './lang/i18n.js'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -50,6 +51,7 @@ const vuetify = createVuetify({
 const pinia = createPinia()
 
 const app = createApp(App)
+app.use(i18n)
 app.use(router)
 app.use(vuetify)
 app.use(pinia)

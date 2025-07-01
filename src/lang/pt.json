@@ -1,0 +1,15 @@
+{
+  "about.title": "Sobre o Projeto",
+  "about.first-paragraph": "O LocalStack Web nasceu da necessidade de ter uma interface visual intuitiva para gerenciar serviços AWS localmente durante o desenvolvimento.",
+  "about.second-paragraph": "Com esta ferramenta, desenvolvedores podem visualizar e interagir com serviços como S3, DynamoDB, Lambda e outros de forma mais eficiente.",
+  "about.third-paragraph": "O projeto utiliza Vue.js 3 com Vuetify para criar uma experiência moderna e responsiva, facilitando o trabalho com LocalStack.",
+  "about.fourth-paragraph": "A interface permite monitorar recursos, executar operações e debugar aplicações sem a necessidade de usar apenas a linha de comando.",
+  "about.project-author": "Autor do projeto",
+  "about.connect-on-linkedin": "Conectar no LinkedIn",
+  "about.why-localstack-web": "Por que LocalStack Web?",
+  "about.collaboration-welcome": "Colaboração Bem-Vinda!",
+  "about.collaboration": "Este projeto é open source e aceita contribuições da comunidade. Sinta-se à vontade para reportar bugs, sugerir melhorias ou contribuir com código.",
+  "about.view-on-github": "Ver no GitHub",
+  "about.report-issue": "Reportar Issue",
+  "about.technology-stack": "Stack Tecnológico"
+}
