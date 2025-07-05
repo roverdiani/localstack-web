@@ -1,4 +1,5 @@
 {
+  "about": "About",
   "about.title": "About the Project",
   "about.first-paragraph": "LocalStack Web was born out of the need for an intuitive visual interface to manage AWS services locally during development.",
   "about.second-paragraph": "With this tool, developers can visualize and interact with services like S3, DynamoDB, Lambda, and others more efficiently.",
@@ -14,8 +15,17 @@
   "about.technology-stack": "Technology Stack",
   "actions": "Actions",
   "cancel": "Cancel",
+  "save": "Save",
   "create": "Create",
   "confirm": "Confirm",
+  "close": "Close",
+  "configurations": "Configurations",
+  "configurations.saved-successfully": "Configurations saved successfully!",
+  "connecting": "Connecting",
+  "connected": "Connected",
+  "disconnected": "Disconnected",
+  "dark-mode": "Dark Mode",
+  "light-mode": "Light Mode",
   "dashboard.title": "Dashboard",
   "dashboard.loading-statistics": "Loading statistics...",
   "dashboard.service-unavailable": "Service unavailable or out of resources",
@@ -95,5 +105,6 @@
   "type": "Type",
   "string": "String",
   "number": "Number",
-  "binary": "Binary"
+  "binary": "Binary",
+  "localstack-endpoint": "LocalStack Endpoint"
 }

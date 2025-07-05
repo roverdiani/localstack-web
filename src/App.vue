@@ -15,7 +15,7 @@
           <template v-slot:prepend>
             <v-icon>mdi-view-dashboard</v-icon>
           </template>
-          <v-list-item-title>Dashboard</v-list-item-title>
+          <v-list-item-title>{{ t('dashboard.title') }}</v-list-item-title>
         </v-list-item>
       </v-list>
 
@@ -69,11 +69,11 @@
         <v-icon start>
           {{ connectionStatus === 'connected' ? 'mdi-check-circle' : 'mdi-alert-circle' }}
         </v-icon>
-        {{ connectionStatus === 'connected' ? 'Conectado' : 'Desconectado' }}
+        {{ t(connectionStatus) }}
       </v-chip>
 
 
-      <v-tooltip :text="isDark ? 'Modo Claro' : 'Modo Escuro'" location="bottom">
+      <v-tooltip :text="$t(isDark ? 'light-mode' : 'dark-mode')" location="bottom">
         <template v-slot:activator="{ props }">
           <v-btn icon @click="toggleTheme" v-bind="props">
             <v-icon>{{ isDark ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
@@ -81,7 +81,7 @@
         </template>
       </v-tooltip>
 
-      <v-tooltip text="Configurações" location="bottom">
+      <v-tooltip :text="$t('configurations')" location="bottom">
         <template v-slot:activator="{ props }">
           <v-btn icon @click="openSettings" v-bind="props">
             <v-icon>mdi-cog</v-icon>
@@ -89,7 +89,7 @@
         </template>
       </v-tooltip>
 
-      <v-tooltip text="Sobre" location="bottom">
+      <v-tooltip :text="$t('about')" location="bottom">
         <template v-slot:activator="{ props }">
           <v-btn icon @click="$router.push('/about')" v-bind="props">
             <v-icon>mdi-information</v-icon>
@@ -109,12 +109,12 @@
     <v-dialog v-model="settingsDialog" max-width="500">
       <v-card>
         <v-card-title>
-          <span class="text-h5">Configurações</span>
+          <span class="text-h5">{{ t('configurations') }}</span>
         </v-card-title>
         <v-card-text>
           <v-text-field
             v-model="localstackEndpoint"
-            label="LocalStack Endpoint"
+            :label="$t('localstack-endpoint')"
             placeholder="http://localhost:4566"
             prepend-icon="mdi-server"
             @keyup.enter="saveSettings"
@@ -122,8 +122,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn text @click="settingsDialog = false">Cancelar</v-btn>
-          <v-btn color="primary" @click="saveSettings">Salvar</v-btn>
+          <v-btn text @click="settingsDialog = false">{{ t('cancel') }}</v-btn>
+          <v-btn color="primary" @click="saveSettings">{{ t('save') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -140,7 +140,7 @@
           variant="text"
           @click="snackbar.show = false"
         >
-          Fechar
+          {{ t('close') }}
         </v-btn>
       </template>
     </v-snackbar>
@@ -153,6 +153,9 @@ import { useTheme } from 'vuetify'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
 import logoImage from '@/assets/localstack-logo.png'
+import { i18n } from '@/lang/i18n.js'
+
+const { t } = i18n.global
 
 const theme = useTheme()
 const appStore = useAppStore()
@@ -187,7 +190,7 @@ const openSettings = () => {
 const saveSettings = () => {
   appStore.setEndpoint(localstackEndpoint.value)
   settingsDialog.value = false
-  appStore.showSnackbar('Configurações salvas com sucesso!', 'success')
+  appStore.showSnackbar(t('configurations.saved-successfully'), 'success')
 }
 
 onMounted(() => {
